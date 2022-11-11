@@ -94,7 +94,7 @@ export default {
     document.getElementById("search").onclick = () => {
       var request = {
         origin:
-          "FACENS, Rodovia Senador José Ermírio de Moraes, 1425 - Jardim Constantino Matucci, Sorocaba - SP, 18085-784",
+          "Marginal Senador JosÃ© ErmÃ­rio de Moraes - Rodovia, 259, Sorocaba - SP",
         destination:
           "Terminal Santo Antônio, Av. Dr. Afonso Vergueiro, 733 - Centro, Sorocaba - SP, 18040-000",
         travelMode: google.maps.TravelMode.DRIVING,
