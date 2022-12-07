@@ -4,6 +4,9 @@
       <div v-show="errorMensage" style="background-color: red; color: white">
         {{ errorMensage }}
       </div>
+      <div v-show="response" style="background-color: green; color: white">
+        {{ response }}
+      </div>
 
       <div id="form" class="form-style">
         <div style="padding: 15px 0px 0px 10px">
@@ -61,25 +64,21 @@ export default {
       start_point: "",
       end_point: "",
       errorMensage: "",
-      // results: "",
+      response: "",
     };
   },
 
   mounted() {
     const google = window.google;
-    new google.maps.places.Autocomplete(
-      document.getElementById("start_input"),
-      {
-        bounds: new google.maps.LatLngBounds(
-          new google.maps.LatLng(-23.50167, -47.45806)
-        ),
-      }
-    );
-    new google.maps.places.Autocomplete(document.getElementById("end_input"), {
-      bounds: new google.maps.LatLngBounds(
-        new google.maps.LatLng(-23.50167, -47.45806)
-      ),
-    });
+
+    // new google.maps.places.Autocomplete(
+    //   document.getElementById("end_input"),
+    //   {
+    //     bounds: new google.maps.LatLngBounds(
+    //       new google.maps.LatLng(-23.50167, -47.45806)
+    //     ),
+    //   }
+    // );
 
     const map = new google.maps.Map(document.getElementById("map"), {
       zoom: 15,
@@ -92,29 +91,77 @@ export default {
     directionsRenderer.setMap(map);
 
     document.getElementById("search").onclick = () => {
-      var request = {
-        origin:
-          "Marginal Senador JosÃ© ErmÃ­rio de Moraes - Rodovia, 259, Sorocaba - SP",
-        destination:
-          "Terminal Santo Antônio, Av. Dr. Afonso Vergueiro, 733 - Centro, Sorocaba - SP, 18040-000",
-        travelMode: google.maps.TravelMode.DRIVING,
-        unitSystem: google.maps.UnitSystem.IMPERIAL,
-      };
+      directionsRenderer.setDirections({ routes: [] });
+      map.setCenter({ lat: -23.50167, lng: -47.45806 });
 
-      directionsService.route(request, function (response, status) {
-        if (status === "OK") {
-          directionsRenderer.setDirections(response);
+      var request;
+      const waypoint = [];
+
+      if (this.end_point && this.start_point) {
+        waypoint.push({
+          location:
+            "Terminal Santo Antônio, Av. Dr. Afonso Vergueiro, 733 - Centro, Sorocaba - SP, 18040-000",
+        });
+
+        if (this.end_point == "Aeroporto") {
+          this.response =
+            "LINHA 101 - Rodoviária / Pça. Nove de Julho | Terminal Santo Antonio";
+
+          request = {
+            origin:
+              "FACENS, Rodovia Senador José Ermírio de Moraes, 1425 - Jardim Constantino Matucci, Sorocaba - SP, 18085-784",
+            destination:
+              "Aeroporto Estadual de Sorocaba - Bertram Luiz Leupolz (SOD) - Avenida Santos Dumont - Vila Santa Clara, Sorocaba - State of São Paulo",
+            waypoints: waypoint,
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.IMPERIAL,
+          };
+        } else if (this.end_point == "Hospital") {
+          this.response =
+            "LINHA 103 - Centro Hospitalar | Terminal Santo Antonio";
+
+          request = {
+            origin:
+              "FACENS, Rodovia Senador José Ermírio de Moraes, 1425 - Jardim Constantino Matucci, Sorocaba - SP, 18085-784",
+            destination:
+              "Hospital Regional de Sorocaba 'Dr. Linneu Matos Silveira' | Conjunto Hospitalar de Sorocaba (CHS) - Rua Claudio Manoel da Costa - Jardim Vergueiro, Sorocaba - State of São Paulo",
+            waypoints: waypoint,
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.IMPERIAL,
+          };
         } else {
-          directionsRenderer.setDirections({ routes: [] });
-          map.setCenter({ lat: -23.50167, lng: -47.45806 });
+          this.response = "LINHA 100 - Expresso | Terminal Santo Antonio";
 
-          this.errorMensage = "Could not retrieve driving distance.";
+          request = {
+            origin:
+              "FACENS, Rodovia Senador José Ermírio de Moraes, 1425 - Jardim Constantino Matucci, Sorocaba - SP, 18085-784",
+            destination:
+              "Terminal Santo Antônio, Av. Dr. Afonso Vergueiro, 733 - Centro, Sorocaba - SP, 18040-000",
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.IMPERIAL,
+          };
         }
-      });
+
+        directionsService.route(request, function (response, status) {
+          if (status === "OK") {
+            directionsRenderer.setDirections(response);
+          } else {
+            directionsRenderer.setDirections({ routes: [] });
+            map.setCenter({ lat: -23.50167, lng: -47.45806 });
+
+            this.errorMensage = "Não foi possivel calcular a rota.";
+          }
+        });
+      } else {
+        this.errorMensage = "Não se pode deixar campos vazios.";
+      }
     };
+
     document.getElementById("reset").onclick = () => {
       this.start_point = "";
       this.end_point = "";
+      this.errorMensage = "";
+      this.response = "";
 
       directionsRenderer.setDirections({ routes: [] });
       map.setCenter({ lat: -23.50167, lng: -47.45806 });
@@ -157,7 +204,7 @@ export default {
             lat +
             "," +
             lng +
-            "&key=AIzaSyDjz4S100FJGxG8uVVR_30WESHUfsyzVdg"
+            "&key=apikey"
         )
         .then((response) => {
           if (response.data.error_message) {
